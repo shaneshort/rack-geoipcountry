@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = 'rack-geoipcountry'
 
-  s.add_dependency 'maxmind-db', '>= 1.1.2'
+  s.add_dependency 'maxmind-db', '>= 1.0.0'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
