@@ -31,6 +31,7 @@ module Rack
       options[:db] ||= 'GeoLite2-Country.mmdb'
       options[:language] ||= 'en'
       @db = MaxMind::DB.new(options[:db], mode: MaxMind::DB::MODE_MEMORY)
+      @language = options[:language]
       @app = app
     end
 
@@ -46,7 +47,7 @@ module Rack
       unless result.nil?
         env['X_GEOIP_COUNTRY_ID'] = result['country']['geoname_id']
         env['X_GEOIP_COUNTRY_CODE'] = result['country']['iso_code']
-        env['X_GEOIP_COUNTRY'] = result['country']['names'][options[:language]]
+        env['X_GEOIP_COUNTRY'] = result['country']['names'][@language]
         env['X_GEOIP_CONTINENT'] = result['continent']['iso_code']
       end
 
