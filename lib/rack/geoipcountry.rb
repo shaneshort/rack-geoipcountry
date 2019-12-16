@@ -1,9 +1,9 @@
-require 'geoip'
+require 'maxmind/db'
 
 module Rack
   # Rack::GeoIPCountry uses the geoip gem and the GeoIP database to lookup the country of a request by its IP address
   # The database can be downloaded from:
-  # http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
+  # https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz
   #
   # Usage:
   # use Rack::GeoIPCountry, :db => "path/to/GeoIP.dat"
@@ -28,19 +28,29 @@ module Rack
   # MIT License - Karol Hosiawa ( http://twitter.com/hosiawak )
   class GeoIPCountry
     def initialize(app, options = {})
-      options[:db] ||= 'GeoIP.dat'
-      @db = GeoIP.new(options[:db])
+      options[:db] ||= 'GeoLite2-Country.mmdb'
+      options[:language] ||= 'en'
+      @db = MaxMind::DB.new(options[:db], mode: MaxMind::DB::MODE_MEMORY)
       @app = app
     end
 
     def call(env)
       request = Rack::Request.new(env)
-      result = @db.country(request.ip).to_hash
-      env['X_GEOIP_COUNTRY_ID'] = result[:country_code]
-      env['X_GEOIP_COUNTRY_CODE'] = result[:country_code2]
-      env['X_GEOIP_COUNTRY_CODE3'] = result[:country_code3]
-      env['X_GEOIP_COUNTRY'] = result[:country_name]
-      env['X_GEOIP_CONTINENT'] = result[:continent_code]
+      result = @db.get(request.ip)
+      env['X_GEOIP_COUNTRY_ID'] = 0
+      env['X_GEOIP_COUNTRY_CODE'] = '--'
+      env['X_GEOIP_COUNTRY_CODE3'] = '--'
+      env['X_GEOIP_COUNTRY'] = 'N/A'
+      env['X_GEOIP_CONTINENT'] = '--'
+
+      unless result.nil?
+        env['X_GEOIP_COUNTRY_ID'] = result['country']['geoname_id']
+        env['X_GEOIP_COUNTRY_CODE'] = result['country']['iso_code']
+        env['X_GEOIP_COUNTRY'] = result['country']['names'][options[:language]]
+        env['X_GEOIP_CONTINENT'] = result['continent']['iso_code']
+      end
+
+      @db.close
       @app.call(env)
     end
 
