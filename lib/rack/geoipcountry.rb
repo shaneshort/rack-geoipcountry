@@ -45,10 +45,10 @@ module Rack
       env['X_GEOIP_CONTINENT'] = '--'
 
       unless result.nil?
-        env['X_GEOIP_COUNTRY_ID'] = result['country']['geoname_id']
-        env['X_GEOIP_COUNTRY_CODE'] = result['country']['iso_code']
-        env['X_GEOIP_COUNTRY'] = result['country']['names'][@language]
-        env['X_GEOIP_CONTINENT'] = result['continent']['iso_code']
+        env['X_GEOIP_COUNTRY_ID']   = result.dig('country', 'geoname_id')
+        env['X_GEOIP_COUNTRY_CODE'] = result.dig('country', 'iso_code')
+        env['X_GEOIP_COUNTRY']      = result.dig('country', 'names', @language)
+        env['X_GEOIP_CONTINENT']    = result.dig('continent', 'iso_code')
       end
 
       @db.close
